@@ -9,7 +9,8 @@ Everything comes prebuilt, including the CUDA and Visual C++ runtimes. Image inp
 | **Ornith-1.5-35B-A3B** (PXQ2) | PXA | ~60 tok/s | 16k | `run\ornith.cmd` |
 | **Qwen3.8-27B** (PXQ3) | PXA | ~27 tok/s | 8k | `run\qwen27b-pxq3.cmd` |
 | **Qwen3.8-27B HauhauCS Aggressive** (IQ3_XS + FastMTP) | FastMTP | **40–53 tok/s** | 24k | `run\hauhau-fast.cmd` |
-| same, long-context mode | FastMTP | ~46 tok/s short / ~14 tok/s at 118k | **120k** | `run\hauhau-long.cmd` |
+| same, 80k mode (FastMTP + images on GPU) | FastMTP | ~46 tok/s short / ~22 tok/s at 77k | **80k** | `run\hauhau-80k.cmd` |
+| same, long-context mode (images on CPU) | FastMTP | ~46 tok/s short / ~14 tok/s at 118k | **120k** | `run\hauhau-long.cmd` |
 
 Every server provides a **web chat** at `http://127.0.0.1:8899` and an **OpenAI-compatible API** at `http://127.0.0.1:8899/v1`.
 
@@ -91,7 +92,8 @@ For images, send OpenAI-style `image_url` content parts; `scripts\vision-test.ps
 
 - **Fastest replies:** `fusion4` or `ornith`. These are 35B mixture-of-experts models that use only about 3B parameters per token.
 - **Best quality from a dense 27B model at a good speed:** `hauhau-fast`. This model ships a small "FastMTP" draft model that guesses ahead, and the main model checks the guesses. That makes it about 1.5–1.9× faster than running without one.
-- **Long documents or codebases (up to 120k tokens):** `hauhau-long`. Reading the prompt runs at about 200–470 tok/s, so a 100k-token prompt takes several minutes before the first reply token. Later messages in the same chat reuse the cache.
+- **Long documents together with fast image input (up to 80k tokens):** `hauhau-80k`. It keeps the FastMTP sidecar and the image encoder on the GPU, so an image takes about 3.5 s instead of about 10 s.
+- **The longest documents or codebases (up to 120k tokens):** `hauhau-long`. Reading the prompt runs at about 200–470 tok/s, so a 100k-token prompt takes several minutes before the first reply token. Later messages in the same chat reuse the cache.
 
 ### Benchmarks (Tesla V100-SXM2-16GB, temperature 0)
 
@@ -107,6 +109,10 @@ For images, send OpenAI-style `image_url` content parts; `scripts\vision-test.ps
 **120k context test:** a 117,955-token prompt with a secret code hidden in the middle. The model returned the right code.
 It took 595 s to read the prompt (198 tok/s) and then generated at 14.5 tok/s. Peak VRAM was 16.1 GB.
 
+**80k context test (`hauhau-80k`):** a 77,299-token prompt, which returned the right code. It took 332 s to read (234 tok/s) and then generated at 22.0 tok/s.
+An image sent afterwards was still read correctly on the GPU (4.5 s). Peak VRAM was 16.2 GB.
+The same setup at 90k (`-c 92160`) **ran out of memory** after reading an 87k-token prompt, just as generation started, so 80k is the practical limit with this setup.
+
 ### Checking speed and vision on your machine
 
 ```powershell
@@ -121,6 +127,9 @@ powershell -ExecutionPolicy Bypass -File scripts\longctx-test.ps1 -Paragraphs 30
 - **Vision encoder on the CPU** (`--no-mmproj-offload`). This adds a few seconds per image.
 - **The model's built-in MTP head instead of the FastMTP sidecar.** Benchmarks show a 2–3% speed difference, and it saves 1.1 GB.
 - **`-ub 256`.** In testing, `-ub 128` triggered a cuBLAS error in this llama.cpp version, and `-ub 512` ran out of memory on a 118k-token prompt.
+
+`run\hauhau-80k.cmd` keeps the FastMTP sidecar and the image encoder on the GPU. It uses the same 4-bit main-model cache and `-ub 256`, but a smaller context.
+Don't add `--spec-draft-type-k/v q4_0` there. Quantizing the sidecar's cache shrinks the cache from 360 MB to 101 MB, but its compute buffer grows from 80 MB to 446 MB, so total memory goes *up*.
 
 ---
 
