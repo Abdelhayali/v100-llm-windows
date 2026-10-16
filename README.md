@@ -1,19 +1,19 @@
-﻿# v100-llm-windows
+# v100-llm-windows
 
 Run fast local LLMs **natively on Windows** on an **NVIDIA Tesla V100 16 GB**. You don't need WSL, Docker or Linux.
 Everything comes prebuilt, including the CUDA and Visual C++ runtimes. Image input (vision) works on every model.
 
-| Model | Engine | Speed on 1Ã— V100-SXM2-16GB | Context | Script |
+| Model | Engine | Speed on 1× V100-SXM2-16GB | Context | Script |
 |---|---|---|---|---|
-| **PXA-Fusion4-35B-A3B** (PXQ2) | PXA | **64â€“76 tok/s** | 16k | `run\fusion4.cmd` |
+| **PXA-Fusion4-35B-A3B** (PXQ2) | PXA | **64–76 tok/s** | 16k | `run\fusion4.cmd` |
 | **Ornith-1.5-35B-A3B** (PXQ2) | PXA | ~60 tok/s | 16k | `run\ornith.cmd` |
 | **Qwen3.8-27B** (PXQ3) | PXA | ~27 tok/s | 8k | `run\qwen27b-pxq3.cmd` |
-| **Qwen3.8-27B HauhauCS Aggressive** (IQ3_XS + FastMTP) | FastMTP | **40â€“53 tok/s** | 24k | `run\hauhau-fast.cmd` |
+| **Qwen3.8-27B HauhauCS Aggressive** (IQ3_XS + FastMTP) | FastMTP | **40–53 tok/s** | 24k | `run\hauhau-fast.cmd` |
 | same, long-context mode | FastMTP | ~46 tok/s short / ~14 tok/s at 118k | **120k** | `run\hauhau-long.cmd` |
 
 Every server provides a **web chat** at `http://127.0.0.1:8899` and an **OpenAI-compatible API** at `http://127.0.0.1:8899/v1`.
 
-> âš ï¸ **Content warning:** Fusion4 is "abliterated" and the HauhauCS model is an "uncensored / aggressive" fine-tune, so both have had their safety tuning removed.
+> ⚠️ **Content warning:** Fusion4 is "abliterated" and the HauhauCS model is an "uncensored / aggressive" fine-tune, so both have had their safety tuning removed.
 > Ornith and Qwen3.8 PXQ3 are regular fine-tunes and quantizations.
 
 ---
@@ -24,7 +24,7 @@ Every server provides a **web chat** at `http://127.0.0.1:8899` and an **OpenAI-
 - An NVIDIA **Tesla V100 16 GB** (SXM2 or PCIe). The binaries are compiled for Volta (`sm_70`). A 32 GB V100 also works and has more headroom.
 - An NVIDIA driver from the **R576 series or newer** (needed for CUDA 12.9). A V100 in **TCC mode** is fine, and TCC is the default for this card on Windows.
 - An x86-64 CPU with **AVX2** (any Intel or AMD CPU from 2015 or later)
-- Disk space: about 1.3 GB for the binaries, plus 10â€“14 GB for each model
+- Disk space: about 1.3 GB for the binaries, plus 10–14 GB for each model
 - RAM: 32 GB or more recommended
 
 You **don't** need to install CUDA, Visual Studio or Python.
@@ -42,7 +42,7 @@ powershell -ExecutionPolicy Bypass -File setup.ps1
 2. Downloads the prebuilt binaries (`v100-llm-windows-bin.zip` from the [latest release](https://github.com/Abdelhayali/v100-llm-windows/releases/latest)) into `bin\`.
 3. Offers to download models, verifying each file's SHA-256 checksum.
 
-No git? Click **Code â†’ Download ZIP** on GitHub, extract it, and run `setup.ps1` from that folder.
+No git? Click **Code → Download ZIP** on GitHub, extract it, and run `setup.ps1` from that folder.
 
 Then start a model:
 
@@ -90,8 +90,8 @@ For images, send OpenAI-style `image_url` content parts; `scripts\vision-test.ps
 ## Which model should I use?
 
 - **Fastest replies:** `fusion4` or `ornith`. These are 35B mixture-of-experts models that use only about 3B parameters per token.
-- **Best quality from a dense 27B model at a good speed:** `hauhau-fast`. This model ships a small "FastMTP" draft model that guesses ahead, and the main model checks the guesses. That makes it about 1.5â€“1.9Ã— faster than running without one.
-- **Long documents or codebases (up to 120k tokens):** `hauhau-long`. Reading the prompt runs at about 200â€“470 tok/s, so a 100k-token prompt takes several minutes before the first reply token. Later messages in the same chat reuse the cache.
+- **Best quality from a dense 27B model at a good speed:** `hauhau-fast`. This model ships a small "FastMTP" draft model that guesses ahead, and the main model checks the guesses. That makes it about 1.5–1.9× faster than running without one.
+- **Long documents or codebases (up to 120k tokens):** `hauhau-long`. Reading the prompt runs at about 200–470 tok/s, so a 100k-token prompt takes several minutes before the first reply token. Later messages in the same chat reuse the cache.
 
 ### Benchmarks (Tesla V100-SXM2-16GB, temperature 0)
 
@@ -119,7 +119,7 @@ powershell -ExecutionPolicy Bypass -File scripts\longctx-test.ps1 -Paragraphs 30
 `run\hauhau-long.cmd` uses four settings to fit:
 - **4-bit KV cache** (`-ctk q4_0 -ctv q4_0`). The cache is 2.1 GB instead of about 8 GB.
 - **Vision encoder on the CPU** (`--no-mmproj-offload`). This adds a few seconds per image.
-- **The model's built-in MTP head instead of the FastMTP sidecar.** Benchmarks show a 2â€“3% speed difference, and it saves 1.1 GB.
+- **The model's built-in MTP head instead of the FastMTP sidecar.** Benchmarks show a 2–3% speed difference, and it saves 1.1 GB.
 - **`-ub 256`.** In testing, `-ub 128` triggered a cuBLAS error in this llama.cpp version, and `-ub 512` ran out of memory on a 118k-token prompt.
 
 ---
@@ -162,7 +162,7 @@ build\build-pxa.cmd                                                # PXA + Windo
 build\build-fastmtp.cmd                                            # llama.cpp + FastMTP   -> build\llama.cpp\build\bin
 ```
 
-Then copy the `llama-*.exe` files into `bin\pxa` and `bin\fastmtp`. Each build takes about 20â€“40 minutes, most of it compiling CUDA kernels.
+Then copy the `llama-*.exe` files into `bin\pxa` and `bin\fastmtp`. Each build takes about 20–40 minutes, most of it compiling CUDA kernels.
 
 ## Troubleshooting
 
@@ -173,7 +173,7 @@ Then copy the `llama-*.exe` files into `bin\pxa` and `bin\fastmtp`. Each build t
 
 ## Licences and credits
 
-- PXA: MIT, Â© PXA Network and the llama.cpp, ggml and ik_llama.cpp authors. See `LICENSES/PXA-LICENSE.txt` and `PXA-NOTICE.txt`.
+- PXA: MIT, © PXA Network and the llama.cpp, ggml and ik_llama.cpp authors. See `LICENSES/PXA-LICENSE.txt` and `PXA-NOTICE.txt`.
 - llama.cpp / ggml: MIT. See `LICENSES/llama.cpp-LICENSE.txt`.
 - HauhauCS FastMTP patch: from the HauhauCS model release.
 - CUDA runtime DLLs (`cudart`, `cuBLAS`, `cuBLASLt`): redistributed under the NVIDIA CUDA EULA. See `LICENSES/NVIDIA-CUDA-EULA.txt`.
