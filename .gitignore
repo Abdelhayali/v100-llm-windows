@@ -1,0 +1,6 @@
+bin/
+models/
+build/cuda-12.9/
+build/pxa/
+build/llama.cpp/
+*.log
